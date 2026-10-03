@@ -55,4 +55,110 @@ El proyecto se fundamenta en rigurosos principios de ingeniería de software par
 
 ---
 
+## Estructura del Monorepo
+
+```text
+aegis/
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── LICENSE.md
+├── README.md
+├── backend/
+│   ├── alembic.ini
+│   ├── alembic/
+│   │   └── env.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── src/
+│       ├── main.py
+│       ├── application/
+│       │   ├── schemas/
+│       │   │   ├── alert.py
+│       │   │   ├── certificate.py
+│       │   │   └── endpoint.py
+│       │   └── use_cases/
+│       │       └── security_cases.py
+│       ├── domain/
+│       │   └── models/
+│       │       ├── alert.py
+│       │       ├── base.py
+│       │       ├── certificate.py
+│       │       └── endpoint.py
+│       └── infrastructure/
+│           ├── api/routers/
+│           │   └── alerts.py
+│           ├── database/
+│           │   └── session.py
+│           ├── websockets/
+│           │   └── server.py
+│           └── workers/
+│               └── cert_manager.py
+├── frontend/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+│       ├── components/
+│       │   └── SecurityDashboard.tsx
+│       ├── store/
+│       │   └── useSecurityStore.ts
+│       └── types/
+│           └── security.ts
+└── infrastructure/
+    └── envoy/
+        └── envoy.yaml
+```
+
+## Guía de Instalación y Pruebas Locales
+
+Para ejecutar el Proyecto Aegis en tu entorno local y probar el flujo de telemetría de red, sigue estos pasos:
+
+### 1. Preparación del Entorno
+Clona el repositorio y configura las variables de entorno basadas en el template proporcionado:
+```bash
+git clone https://github.com/javiergiraldo/aegis.git
+cd aegis
+cp .env.example .env
+```
+
+### 2. Levantamiento de la Infraestructura Base
+Inicia la base de datos PostgreSQL, el Backend FastAPI y el Gateway Envoy Proxy de forma automatizada mediante Docker:
+```bash
+docker-compose up -d --build
+```
+
+### 3. Migraciones de la Base de Datos
+Una vez que el contenedor de base de datos está operativo, aplica el esquema inicial usando Alembic (desde dentro del contenedor backend o un entorno virtual local):
+```bash
+cd backend
+alembic upgrade head
+cd ..
+```
+
+### 4. Inicialización del Frontend
+Abre una nueva terminal, instala las dependencias de Node.js e inicia el entorno de desarrollo del Dashboard en React:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 5. Simulación de Telemetría (Prueba E2E)
+Abre tu navegador en el puerto donde Vite esté corriendo (usualmente `http://localhost:5173`) para visualizar el **Security Posture Dashboard**. El indicador de WebSockets debería mostrar un estatus `ONLINE`.
+
+Luego, envía una alerta HTTP de prueba mediante `curl` simulando tráfico interceptado por el WAF. *Al enviar a `localhost:80`, Envoy Proxy enrutará automáticamente el tráfico al microservicio backend*:
+```bash
+curl -X POST http://localhost:80/api/v1/alerts \
+-H "Content-Type: application/json" \
+-d '{
+  "source_ip": "192.168.1.10",
+  "severity": "CRITICAL",
+  "alert_type": "WAF_SQL_INJECTION",
+  "description": "Detectado payload malicioso en los headers HTTP"
+}'
+```
+Inmediatamente observarás cómo el evento se persiste en PostgreSQL e impacta en tiempo real tu panel de control React a través del canal de Socket.IO, agregando una nueva fila de alerta.
+
+---
+
 > **Nota:** Este proyecto forma parte del portafolio profesional de **Javier Andrey Giraldo Rivera**, demostrando capacidades avanzadas en Arquitectura Cloud-Native, DevSecOps e Ingeniería de Software.
