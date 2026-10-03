@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: aegis_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-aegis_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_demo_123}
+      POSTGRES_DB: ${DB_NAME:-aegis_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - aegis_net
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aegis_backend
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-aegis_admin}:${DB_PASSWORD:-secure_password_demo_123}@db:5432/${DB_NAME:-aegis_db}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - aegis_net
+    restart: unless-stopped
+
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: aegis_gateway
+    volumes:
+      - ./infrastructure/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "80:80"      # Gateway HTTP Port
+      - "443:443"    # Gateway HTTPS Port
+      - "9901:9901"  # Envoy Admin Port
+    depends_on:
+      - backend
+    networks:
+      - aegis_net
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  aegis_net:
+    driver: bridge

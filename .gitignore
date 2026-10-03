@@ -1,0 +1,53 @@
+# Entornos Virtuales y Dependencias
+venv/
+env/
+.env
+.venv
+__pycache__/
+*.pyc
+*.pyo
+
+# IDEs y Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Bases de Datos Locales
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs y Archivos Temporales
+logs/
+*.log
+tmp/
+temp/
+
+# Claves y Certificados SSL Generados
+certs/
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+
+# Node y Frontend
+node_modules/
+dist/
+build/
+.npm/
+
+# Entorno de Compilación Python
+dist/
+build/
+*.egg-info/
+
+# Archivos Sensibles e Identidades
+.ssh/
+id_rsa
+id_rsa.pub
+*.pem
+
+# MacOS
+.DS_Store
