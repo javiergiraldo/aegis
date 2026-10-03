@@ -1,0 +1,28 @@
+from sqlalchemy.orm import Session
+from src.domain.models.alert import SecurityAlert
+from src.application.schemas.alert import SecurityAlertCreate, SecurityAlertResponse
+from src.infrastructure.websockets.server import emit_security_alert
+
+class RegisterSecurityAlertUseCase:
+    """
+    Caso de Uso Principal: Registrar una nueva alerta de seguridad 
+    y emitirla en tiempo real hacia los clientes del dashboard.
+    """
+    def __init__(self, db: Session):
+        self.db = db
+
+    async def execute(self, alert_in: SecurityAlertCreate) -> SecurityAlertResponse:
+        # 1. Persistir el evento en PostgreSQL
+        alert_model = SecurityAlert(**alert_in.model_dump())
+        self.db.add(alert_model)
+        self.db.commit()
+        self.db.refresh(alert_model)
+        
+        # 2. Mapear a Schema de Respuesta Pydantic
+        alert_response = SecurityAlertResponse.model_validate(alert_model)
+        
+        # 3. Serializar y propagar evento vía Socket.IO asíncronamente
+        alert_data = alert_response.model_dump(mode='json')
+        await emit_security_alert(alert_data)
+        
+        return alert_response

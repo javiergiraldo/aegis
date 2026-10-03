@@ -27,14 +27,24 @@ def create_app() -> FastAPI:
             "environment": "development"
         }
 
-    # API Routers would be included here:
-    # app.include_router(endpoints.router, prefix="/api/v1/endpoints", tags=["Endpoints"])
-    # app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+    # Integración de Adaptadores REST (Casos de Uso)
+    from src.infrastructure.api.routers.alerts import router as alerts_router
+    app.include_router(alerts_router, prefix="/api/v1/alerts", tags=["Alerts"])
 
     return app
 
 # Initialize the FastAPI Application
 fastapi_app = create_app()
+
+# Integración del Worker asíncrono
+import asyncio
+from src.infrastructure.workers.cert_manager import CertManagerWorker
+
+@fastapi_app.on_event("startup")
+async def startup_event():
+    # Inicializa el CertManager para que realice barridos cada 60 segundos (simulación)
+    worker = CertManagerWorker(check_interval_seconds=60)
+    asyncio.create_task(worker.start())
 
 # Mount Socket.IO App into FastAPI to create a unified ASGI application
 socket_app = get_socketio_app(fastapi_app)
