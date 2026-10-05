@@ -34,7 +34,6 @@ class RegisterSecurityAlertUseCase:
             # Bypass temporal: Si no tienes PostgreSQL instalado/corriendo,
             # evitamos que el servidor se rompa y continuamos con la emisión.
             self.db.rollback()
-            pass
         
         # 2. Actualizar la métrica de Prometheus (Observabilidad de Negocio)
         SECURITY_ALERTS_COUNT.labels(severity=alert_model.severity).inc()
