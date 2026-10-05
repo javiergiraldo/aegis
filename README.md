@@ -1,10 +1,12 @@
 # Proyecto Aegis
 
 ![Aegis Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
-![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
-![React](https://img.shields.io/badge/React-18-blue.svg)
-![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-orange.svg)
+![Build](https://img.shields.io/github/actions/workflow/status/javiergiraldo/aegis/ci.yml?branch=main&label=CI%20Build)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)
+![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
+![Envoy Proxy](https://img.shields.io/badge/Envoy-F15E22?style=flat&logo=envoy&logoColor=white)
+![License](https://img.shields.io/badge/License-Custom-red.svg)
 
 ## Visión General
 
@@ -15,6 +17,29 @@ Esta solución proporciona un plano de control centralizado y de clase mundial q
 ## Arquitectura y Patrones de Diseño
 
 El proyecto se fundamenta en rigurosos principios de ingeniería de software para garantizar la escalabilidad, el bajo acoplamiento y la mantenibilidad a largo plazo:
+
+### Flujo de Telemetría (Zero-Trust)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Atacante as Simulador/Atacante
+    participant Gateway as Envoy Proxy (Gateway)
+    participant Backend as FastAPI (Backend)
+    participant DB as PostgreSQL (Base de Datos)
+    participant Socket as Socket.IO (ASGI)
+    participant Front as React Dashboard
+
+    Atacante->>Gateway: POST /api/v1/alerts (Payload Malicioso)
+    Gateway->>Gateway: Aplica reglas WAF y Autorización ZTNA
+    Gateway->>Backend: Forward HTTP Request (Tráfico Limpio)
+    Backend->>Backend: Valida Payload (Pydantic)
+    Backend->>DB: Guarda Alerta (SQLAlchemy ORM)
+    DB-->>Backend: Confirma Transacción ACID
+    Backend->>Socket: Serializa evento y despacha
+    Socket-->>Front: Evento Pushed en Tiempo Real (WebSocket)
+    Front->>Front: Zustand actualiza estado y repinta UI
+```
 
 *   **Clean Architecture:** El backend está estrictamente dividido en capas (Domain, Application, Infrastructure, Presentation/Interfaces), aislando la lógica de negocio de los detalles de implementación (frameworks, bases de datos, APIs de terceros).
 *   **Domain-Driven Design (DDD):** El núcleo de la aplicación modela entidades complejas como nodos perimetrales, alertas de seguridad y políticas de certificados (ej. `EndpointNode`, `SecurityAlert`, `SSLCertificatePolicy`).
