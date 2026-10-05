@@ -7,7 +7,7 @@ from src.infrastructure.database.session import get_db
 
 router = APIRouter()
 
-@router.post("/", response_model=SecurityAlertResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=SecurityAlertResponse, status_code=status.HTTP_201_CREATED)
 async def create_security_alert(
     alert_in: SecurityAlertCreate, 
     db: Session = Depends(get_db)

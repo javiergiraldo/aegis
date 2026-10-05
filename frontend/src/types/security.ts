@@ -4,6 +4,6 @@ export interface SecurityAlert {
   severity: 'INFO' | 'WARNING' | 'CRITICAL';
   alert_type: string;
   description: string;
-  timestamp: string;
+  created_at: string;
   payload?: Record<string, any>;
 }

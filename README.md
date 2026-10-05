@@ -8,6 +8,12 @@
 ![Envoy Proxy](https://img.shields.io/badge/Envoy-F15E22?style=flat&logo=envoy&logoColor=white)
 ![License](https://img.shields.io/badge/License-Custom-red.svg)
 
+<br>
+<p align="center">
+  <img src="docs/dashboard.png" alt="Aegis Security Posture Dashboard" width="850">
+</p>
+<br>
+
 ## Visión General
 
 **Proyecto Aegis** es una plataforma integral de observabilidad de seguridad, orquestación DevSecOps y gestión de API Gateway bajo el paradigma **Zero-Trust**. Diseñado para operar en entornos Cloud-Native y ecosistemas de microservicios corporativos de alta demanda. 
@@ -146,14 +152,25 @@ cd aegis
 cp .env.example .env
 ```
 
-### 2. Levantamiento de la Infraestructura Base
+### 2. Levantamiento de la Infraestructura Base (Opción Docker)
 Inicia la base de datos PostgreSQL, el Backend FastAPI y el Gateway Envoy Proxy de forma automatizada mediante Docker:
 ```bash
 docker-compose up -d --build
 ```
 
+### 2.1 Alternativa: Ejecución Nativa de Desarrollo (Backend)
+Si prefieres desarrollar y depurar el backend de manera ágil sin Docker, puedes usar el servidor ASGI `uvicorn` nativo. 
+*(Nota: Requiere tener una base de datos de PostgreSQL corriendo)*
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn src.main:socket_app --host 0.0.0.0 --port 8000 --reload
+```
+
 ### 3. Migraciones de la Base de Datos
-Una vez que el contenedor de base de datos está operativo, aplica el esquema inicial usando Alembic (desde dentro del contenedor backend o un entorno virtual local):
+Una vez que el motor de base de datos está operativo, aplica el esquema inicial usando Alembic:
 ```bash
 cd backend
 alembic upgrade head
@@ -168,21 +185,14 @@ npm install
 npm run dev
 ```
 
-### 5. Simulación de Telemetría (Prueba E2E)
+### 5. Simulación de Telemetría Continua (Prueba E2E)
 Abre tu navegador en el puerto donde Vite esté corriendo (usualmente `http://localhost:5173`) para visualizar el **Security Posture Dashboard**. El indicador de WebSockets debería mostrar un estatus `ONLINE`.
 
-Luego, envía una alerta HTTP de prueba mediante `curl` simulando tráfico interceptado por el WAF. *Al enviar a `localhost:80`, Envoy Proxy enrutará automáticamente el tráfico al microservicio backend*:
+Para inyectar oleadas de tráfico malicioso y ver cómo reacciona la plataforma en tiempo real, hemos creado un script generador de ataques automatizado. En una nueva terminal, ejecuta:
 ```bash
-curl -X POST http://localhost:80/api/v1/alerts \
--H "Content-Type: application/json" \
--d '{
-  "source_ip": "192.168.1.10",
-  "severity": "CRITICAL",
-  "alert_type": "WAF_SQL_INJECTION",
-  "description": "Detectado payload malicioso en los headers HTTP"
-}'
+python scripts/simulate_attacks.py
 ```
-Inmediatamente observarás cómo el evento se persiste en PostgreSQL e impacta en tiempo real tu panel de control React a través del canal de Socket.IO, agregando una nueva fila de alerta.
+Inmediatamente observarás cómo el script dispara payloads que cruzan la red, se persisten en PostgreSQL e impactan en tiempo real tu panel de control React a través de Socket.IO, poblando la tabla dinámicamente y evaluando las severidades visualmente.
 
 ---
 

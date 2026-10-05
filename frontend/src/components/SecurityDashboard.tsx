@@ -79,7 +79,7 @@ export const SecurityDashboard: React.FC = () => {
                   alerts.map((alert) => (
                     <tr key={alert.id} className="hover:bg-gray-800/20 transition-all duration-200">
                       <td className="p-4 text-gray-400 text-xs">
-                        {new Date(alert.timestamp).toLocaleTimeString()}
+                        {new Date(alert.created_at).toLocaleTimeString()}
                       </td>
                       <td className="p-4">
                         <span className={`px-3 py-1 rounded border text-xs font-bold tracking-wide shadow-sm ${severityColors[alert.severity]}`}>
