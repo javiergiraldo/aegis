@@ -1,6 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from src.infrastructure.websockets.server import get_socketio_app
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from src.infrastructure.database.session import get_db
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Counter, Histogram
+import time
+
+# Definición de Métricas de Prometheus
+REQUEST_COUNT = Counter('aegis_http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'http_status'])
+REQUEST_LATENCY = Histogram('aegis_http_request_duration_seconds', 'HTTP request latency', ['endpoint'])
 
 def create_app() -> FastAPI:
     """App Factory for Aegis Core API."""
@@ -19,13 +28,38 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.middleware("http")
+    async def add_prometheus_metrics(request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        
+        # Filtramos las peticiones del socket.io para no inflar las métricas REST
+        if not str(request.url.path).startswith("/socket.io"):
+            REQUEST_LATENCY.labels(endpoint=request.url.path).observe(process_time)
+            REQUEST_COUNT.labels(method=request.method, endpoint=request.url.path, http_status=response.status_code).inc()
+        return response
+
     @app.get("/api/health")
-    async def health_check():
+    async def health_check(db: Session = Depends(get_db)):
+        try:
+            # Observabilidad: Verifica la conexión real con el motor de base de datos
+            db.execute(text("SELECT 1"))
+            db_status = "connected"
+        except Exception:
+            db_status = "disconnected"
+            
         return {
             "status": "ok",
             "service": "Aegis Core Controller",
-            "environment": "development"
+            "environment": "production",
+            "database": db_status
         }
+        
+    @app.get("/metrics")
+    async def metrics():
+        """Endpoint para que el scraper de Prometheus lea la telemetría en texto plano."""
+        return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     # Integración de Adaptadores REST (Casos de Uso)
     from src.infrastructure.api.routers.alerts import router as alerts_router

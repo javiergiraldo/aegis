@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 from src.domain.models.alert import SecurityAlert
 from src.application.schemas.alert import SecurityAlertCreate, SecurityAlertResponse
 from src.infrastructure.websockets.server import emit_security_alert
+from prometheus_client import Counter
+
+# Métrica de negocio para conteo de alertas categorizadas
+SECURITY_ALERTS_COUNT = Counter('aegis_security_alerts_total', 'Total security alerts processed', ['severity'])
 
 class RegisterSecurityAlertUseCase:
     """
@@ -18,10 +22,13 @@ class RegisterSecurityAlertUseCase:
         self.db.commit()
         self.db.refresh(alert_model)
         
-        # 2. Mapear a Schema de Respuesta Pydantic
+        # 2. Actualizar la métrica de Prometheus (Observabilidad de Negocio)
+        SECURITY_ALERTS_COUNT.labels(severity=alert_model.severity).inc()
+        
+        # 3. Mapear a Schema de Respuesta Pydantic
         alert_response = SecurityAlertResponse.model_validate(alert_model)
         
-        # 3. Serializar y propagar evento vía Socket.IO asíncronamente
+        # 4. Serializar y propagar evento vía Socket.IO asíncronamente
         alert_data = alert_response.model_dump(mode='json')
         await emit_security_alert(alert_data)
         

@@ -1,0 +1,88 @@
+---
+- name: Provisionamiento de Infraestructura y Despliegue de Aegis DevSecOps
+  hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    project_dir: "/opt/aegis"
+    ssh_port: 22
+
+  tasks:
+    - name: Actualizar caché de APT y paquetes del sistema (Debian 12)
+      apt:
+        update_cache: yes
+        upgrade: dist
+        autoremove: yes
+
+    - name: Instalar dependencias base de seguridad y red
+      apt:
+        name:
+          - ufw
+          - curl
+          - git
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+        state: present
+
+    - name: Añadir clave GPG oficial de Docker
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Añadir repositorio de Docker
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Instalar Docker Engine y el plugin de Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Asegurar que el servicio de Docker esté en ejecución
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Configurar UFW - Política por defecto DENY a conexiones entrantes
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Configurar UFW - Permitir puerto SSH con límite (Prevención de fuerza bruta)
+      ufw:
+        rule: limit
+        port: "{{ ssh_port }}"
+        proto: tcp
+
+    - name: Configurar UFW - Permitir tráfico web HTTP y HTTPS
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - "80"
+        - "443"
+
+    - name: Crear el directorio del proyecto
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        mode: '0755'
+
+    # (Nota: En un entorno real, aquí se inyectaría el código fuente con un módulo git o rsync)
+
+    - name: Levantar el stack de contenedores (Aegis + Envoy + PostgreSQL)
+      command: docker compose up -d --build
+      args:
+        chdir: "{{ project_dir }}"
+      register: compose_output
+      changed_when: "'Created' in compose_output.stdout or 'Started' in compose_output.stdout"
