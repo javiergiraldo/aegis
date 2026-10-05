@@ -1,11 +1,13 @@
-from fastapi import FastAPI, Depends, Response
-from fastapi.middleware.cors import CORSMiddleware
-from src.infrastructure.websockets.server import get_socketio_app
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from src.infrastructure.database.session import get_db
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Counter, Histogram
 import time
+
+from fastapi import Depends, FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from src.infrastructure.database.session import get_db
+from src.infrastructure.websockets.server import get_socketio_app
 
 # Definición de Métricas de Prometheus
 REQUEST_COUNT = Counter('aegis_http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'http_status'])
@@ -72,7 +74,9 @@ fastapi_app = create_app()
 
 # Integración del Worker asíncrono
 import asyncio
+
 from src.infrastructure.workers.cert_manager import CertManagerWorker
+
 
 @fastapi_app.on_event("startup")
 async def startup_event():

@@ -1,8 +1,11 @@
 import uuid
-from sqlalchemy import String, JSON
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy import JSON, String
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base, AuditableEntity, SoftDeleteEntity
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .base import AuditableEntity, Base, SoftDeleteEntity
+
 
 class EndpointNode(Base, AuditableEntity, SoftDeleteEntity):
     __tablename__ = "endpoint_nodes"

@@ -1,0 +1,5 @@
+[lint]
+# Ignorar advertencias comunes que son falsos positivos en FastAPI:
+# B008: FastAPI usa `Depends()` como valores por defecto de argumentos.
+# BLE001: Captura de excepciones genéricas `Exception` (usada en healthchecks y catch-alls).
+ignore = ["B008", "BLE001"]

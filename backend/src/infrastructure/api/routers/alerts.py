@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from src.infrastructure.database.session import get_db
+
 from src.application.schemas.alert import SecurityAlertCreate, SecurityAlertResponse
 from src.application.use_cases.security_cases import RegisterSecurityAlertUseCase
+from src.infrastructure.database.session import get_db
 
 router = APIRouter()
 

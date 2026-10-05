@@ -1,8 +1,9 @@
-from sqlalchemy.orm import Session
-from src.domain.models.alert import SecurityAlert
-from src.application.schemas.alert import SecurityAlertCreate, SecurityAlertResponse
-from src.infrastructure.websockets.server import emit_security_alert
 from prometheus_client import Counter
+from sqlalchemy.orm import Session
+
+from src.application.schemas.alert import SecurityAlertCreate, SecurityAlertResponse
+from src.domain.models.alert import SecurityAlert
+from src.infrastructure.websockets.server import emit_security_alert
 
 # Métrica de negocio para conteo de alertas categorizadas
 SECURITY_ALERTS_COUNT = Counter('aegis_security_alerts_total', 'Total security alerts processed', ['severity'])

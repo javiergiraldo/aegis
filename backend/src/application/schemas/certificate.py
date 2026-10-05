@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class SSLCertificatePolicyBase(BaseModel):
     domain_name: str = Field(..., max_length=255)

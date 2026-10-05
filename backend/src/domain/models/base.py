@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
+
+from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import DateTime, Boolean, String
+
 
 class Base(DeclarativeBase):
     """Declarative Base instance for SQLAlchemy models."""
-    pass
 
 class AuditableEntity:
     """Mixin to provide audit trail capabilities to models."""

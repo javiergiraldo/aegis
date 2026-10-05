@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class CertManagerWorker:
             try:
                 await self.audit_certificates()
             except Exception as e:
-                logger.error(f"[CertManager] Error durante la auditoría: {str(e)}")
+                logger.error(f"[CertManager] Error durante la auditoría: {e!s}")
             
             # Suspensión no bloqueante de asyncio hasta el próximo ciclo
             await asyncio.sleep(self.check_interval_seconds)

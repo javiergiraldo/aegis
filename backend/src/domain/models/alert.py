@@ -1,10 +1,13 @@
-import uuid
 import enum
+import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, JSON, Enum
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy import JSON, DateTime, Enum, String
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base, AuditableEntity
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .base import AuditableEntity, Base
+
 
 class AlertSeverity(str, enum.Enum):
     INFO = "INFO"
